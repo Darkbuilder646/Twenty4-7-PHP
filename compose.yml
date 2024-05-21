@@ -1,0 +1,57 @@
+services:
+
+  database:
+    image: postgres:latest
+    container_name: postgresql
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: postgres
+    volumes:
+      - postgresql_twenty4-seven:/var/lib/postgresql/data
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.10
+    restart: unless-stopped
+
+  php:
+    container_name: php
+    build: .
+    ports:
+    - "8000:8000"
+    volumes:
+      - ./:/var/www
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.12
+    depends_on:
+      - database
+    restart: unless-stopped
+
+  webserver:
+    image: httpd:latest
+    container_name: webserver
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - php
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.14
+    restart: unless-stopped
+
+volumes:
+  postgresql_twenty4-seven:
+
+networks:
+  app-network:
+    name: twenty4-seven
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway:  172.20.0.1
